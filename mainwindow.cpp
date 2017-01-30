@@ -4,6 +4,7 @@
 #include "waybillwidget.h"
 #include "devicebrowser.h"
 #include "devicewidget.h"
+#include "accessdialog.h"
 #include "qsqlconnectiondialog.h"
 //#include "xlsxdocument.h"
 
@@ -287,14 +288,14 @@ void MainWindow::openDialExcelBrowser()
 
     //QXlsx::Document xlsx(fileName);
     QProgressDialog* pprd = new QProgressDialog("Импортирование данных...", "Отмена", 0, 10000);
-    pprd->setWindowTitle("Пожалуйста, подождите");
-
-    importer->requestWork(fileName, activeDb, tables);
-    thread->start();
+    pprd->setWindowTitle("Пожалуйста, подождите...");
 
     connect(importer, SIGNAL(finished()), this, SLOT());
     connect(importer, SIGNAL(progress(int)), pprd, SLOT(setValue(int));
     connect(importer, SIGNAL(saveDifference()), this, SLOT(openAccessDial()));
+
+    importer->requestWork(fileName, activeDb, tables);
+    thread->start();
 
     for(int i=0; i<10000; i++) {
         pprd->setValue(i);
@@ -304,4 +305,19 @@ void MainWindow::openDialExcelBrowser()
     }
     pprd->setValue(10000);
     delete pprd;
+}
+
+//функция открытия диалога с предупреждением о совпадении данных
+//при импортировании БД. Вопрос о перезаписи/замене данных или
+//пропуске
+void MainWindow::openAccessDial(QSqlRecord record)
+{
+    AccessDialog *dialog = new AccessDialog(record,);
+
+    int accepted = dialog->exec();
+
+    if (accepted == 1) {
+        sc = dialog->getSC();
+    }
+
 }

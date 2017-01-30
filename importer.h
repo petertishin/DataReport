@@ -36,13 +36,13 @@ private:
 
     int changeRecord(QSqlTableModel* model, QSqlRecord* rec, int row, int col);
 
-    bool addNewDepart(int row, int col);
-    bool addNewDevType(int row, int col);
-    bool addNewDevice(int row, int col);
-    bool addNewClient(int row, int col);
-    bool addNewWaybill(int row, int col);
-    bool addNewWork(int row, int col);
-    bool addNewRequest(int row, int col);
+    int addNewDepart(int row, int col);
+    int addNewDevType(int row, int col);
+    int addNewDevice(int row, int col);
+    int addNewClient(int row, int col);
+    int addNewWaybill(int row, int col);
+    int addNewWork(int row, int col);
+    int addNewRequest(int row, int col);
 
     int generateDepartId();
     int generateDevTypeId();
@@ -54,6 +54,7 @@ private:
 
     QString activeDb;
     QXlsx::Document doc;
+    QStringList sheetList;
 
     int uniqueDTid;
     int uniqueDepid;

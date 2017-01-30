@@ -15,30 +15,37 @@ void Importer::requestWork(const QString fname, const QString dbname, const QStr
     departModel = new QSqlTableModel(this, currentDatabase());
     departModel->setTable(dblist.at(0));
     departModel->select();
+    uniqueDepid = departModel->rowCount();
 
     typeModel = new QSqlTableModel(this, currentDatabase());
     typeModel->setTable(dblist.at(1));
     typeModel->select();
+    uniqueDTid = typeModel->rowCount();
 
     clientModel = new QSqlTableModel(this, currentDatabase());
     clientModel->setTable(dblist.at(2));
     clientModel->select();
+    uniqueClid = clientModel->rowCount();
 
     deviceModel = new QSqlTableModel(this, currentDatabase());
     deviceModel->setTable(dblist.at(3));
     deviceModel->select();
+    uniqueDevid = deviceModel->rowCount();
 
     waybillModel = new QSqlTableModel(this, currentDatabase());
     waybillModel->setTable(dblist.at(4));
     waybillModel->select();
+    uniqueWblid = waybillModel->rowCount();
 
     workModel = new QSqlTableModel(this, currentDatabase());
     workModel->setTable(dblist.at(5));
     workModel->select();
+    uniqueWid = workModel->rowCount();
 
     requestModel = new QSqlTableModel(this, currentDatabase());
     requestModel->setTable(dblist.at(6));
     requestModel->select();
+    uniqueRqid = requestModel->rowCount();
 
     readRecords();
 }
@@ -67,74 +74,6 @@ void Importer::readRecords()
         findWorkId(row, col);
         findRequestId(row, col);
 
-
-
-        //ПЕРЕНЕСТИ ДАННУЮ ОБРАБОТКУ В find____Id(row, col)
-        for(int i=0; i<typeModel->rowCount(); i++) {
-            if(typeModel->record(i).value("Type").toString() == deviceType->value(1).toString()){
-                break;
-            } addNewDevice(row, col);
-        }
-
-        for(int i=0; i<departModel->rowCount(); i++) {
-            if(departModel->record(i).value("Name").toString() == department->value(1).toString()){
-                if(departModel->record(i).value("Address").toString() == department->value(1).toString()){
-                    if(departModel->record(i).value("Accessories").toString() == department->value(1).toString()){
-                        break;
-                    } else emit saveDifference();//record,
-                } else emit saveDifference(/*arg*/);
-            } else addNewDepart(row, col);
-        }
-
-        //разбор устройства, добавить автозаполение состояния...
-        for(int i=0; i<deviceModel->rowCount(); i++) {
-            if(deviceModel->record(i).value("Serial").toInt() == device->value(0).toInt()){
-                if(deviceModel->record(i).value("Type").toInt() == device->value(1).toInt()){
-                    if(deviceModel->record(i).value("Produced").toString() == device->value(3).toString()){
-                        if(deviceModel->record(i).value("Department").toInt() == device->value(7).toInt()){
-                            break;
-                        } else emit saveDifference();
-                    } else emit saveDifference();
-                } else emit saveDifference();
-            } else addNewDevice(row, col);
-        }
-
-        for(int i=0; i<clientModel->rowCount(); i++){
-            if(clientModel->record(i).value("Firstname").toString() == client->value(1).toString()){
-                if(clientModel->record(i).value("Lastname").toString() == client->value(2).toString()){
-                    if(clientModel->record(i).value("Thirdname").toString() == client->value(3).toString()){
-                        //if(clientModel->record(i).value("DepartmentName").toInt() == client->value(6).toInt()){
-                            break;
-                        //else emit saveDifference();
-                    } else emit saveDifference();
-                } else emit saveDifference();
-            } else addNewDepart(row, col);
-        }
-
-        for(int i=0; i<waybillModel->rowCount(); i++) {
-            if(waybillModel->record(i).value("Serial").toInt() == waybill->value(0).toInt()){
-                if(waybillModel->record(i).value("Date").toString() == waybill->value(1).toString()){
-                    break;
-                } else emit saveDifference();
-            } else addNewWaybill(row, col);
-        }
-
-        for(int i=0; i<workModel->rowCount(); i++) {
-            if((workModel->record(i).value("WaybillSerial").toInt() == work->value(6).toInt()) &&
-               (workModel->record(i).value("DeviceSerial").toInt() == work->value(5).toInt())){
-                if(workModel->record(i).value("DateR").toString() == work->value(3).toString()){
-                    break;
-                } else emit saveDifference();
-            } else addNewWork(row, col);
-        }
-
-        for(int i=0; i<requestModel->rowCount(); i++) {
-            if((requestModel->record(i).value("Date").toString() == request->value(1).toString()) &&
-               (requestModel->record(i).value("WorkId").toInt() == request->value(6).toInt())){
-                break;
-            } else addNewRequest(row, col);
-        }
-
     }
 }
 
@@ -147,8 +86,10 @@ int Importer::findDevTypeId(int row, int col)
         _rec = typeModel->record(_row);
         if(_rec.value("Type").toString() == doc.cellAt(row, col)->value().toString()) {
             return _rec.value("TypeId").toInt();
-        } else changeRecord();//изменить процесс замены
+        }
+        ++_row;
     }
+    return addNewDevType(row, col);
 }
 int Importer::findDepartId(int row, int col)
 {
@@ -171,7 +112,7 @@ int Importer::findDepartId(int row, int col)
         }
         ++_row;
     }
-    } else addNewDepart(row, col);
+    } else return addNewDepart(row, col);
 }
 int Importer::findDeviceId(int row, int col)
 {
@@ -179,6 +120,7 @@ int Importer::findDeviceId(int row, int col)
     QSqlRecord _rec;
 
     deviceModel->setFilter("Serial"+doc.cellAt(row, col)->value().toInt());
+    if(deviceModel->rowCount() > 0) {
     for(_row=0; _row<deviceModel->rowCount(); _row++) {
         _rec = deviceModel->record(_row);
         if(_rec.value("Serial").toInt() == doc.cellAt(row, col)->value().toInt()){//0
@@ -186,7 +128,7 @@ int Importer::findDeviceId(int row, int col)
                 if(_rec.value("Produced").toString() == doc.cellAt(row, col)->value().toString()){//3
                     if(_rec.value("Department").toInt() == doc.cellAt(row, col)->value().toInt()){//7
                         return _rec.value("Serial").toInt();
-                    } else if(!sc) emit difference(); //строй всю логику на этом примере!!
+                    } else if(!sc) emit difference(deviceModel,_rec, ); //строй всю логику на этом примере!!
                       else if(sc) changeRecord(deviceModel, _rec, row, col);
                 } else if(sc) changeRecord(deviceModel, _rec, row, col);
             } else if(sc) changeRecord(deviceModel, _rec, row, col);
@@ -194,6 +136,7 @@ int Importer::findDeviceId(int row, int col)
         if(_row == deviceModel->rowCount())
             addNewDevice(row, col);
     }
+    } else addNewDevice(row, col);
 }
 int Importer::findClientId(int row, int col)
 {
@@ -201,36 +144,99 @@ int Importer::findClientId(int row, int col)
     QSqlRecord _rec;
 
     clientModel->setFilter("Firstname"+doc.cellAt(row, col)->value().toString());
+    if(clientModel->rowCount() > 0){
     for(int i=0; i<clientModel->rowCount(); i++){
         _rec = clientModel->record(i);
-        if(_rec.value("Firstname").toString() == client->value(1).toString()){
-            if(_rec.value("Lastname").toString() == client->value(2).toString()){
-                if(_rec.value("Thirdname").toString() == client->value(3).toString()){
-                    //if(_rec.value("DepartmentName").toInt() == client->value(6).toInt()){
+        if(_rec.value("Firstname").toString() == doc.cellAt(row, col)->value().toString()){//1
+            if(_rec.value("Lastname").toString() == doc.cellAt(row, col)->value().toString()){//2
+                if(_rec.value("Thirdname").toString() == doc.cellAt(row, col)->value().toString()){//3
+                    //if(_rec.value("DepartmentName").toInt() == doc.cellAt(row, col)->value().toInt()){//6
                         return _rec.value("ClientId").toInt();
                     //else emit saveDifference();
                 } else if(!sc) emit difference();
-                  else if(sc) changeRecord(clientModel, _rec, row, col);
-            } else if(sc) changeRecord(clientModel, _rec, row, col);
-        } else addNewClient(row, col);
+                  else if(sc) return changeRecord(clientModel, _rec, row, col);
+            } else if(sc) return changeRecord(clientModel, _rec, row, col);
+        }
+        if(_row == clientModel->rowCount())
+            return addNewClient(row, col);
     }
+    } else return addNewClient(row, col);
 }
 int Importer::findWaybillId(int row, int col)
 {
+    int _row = 0;
+    QSqlRecord _rec;
 
+    waybillModel->setFilter("Serial"+doc.cellAt(row, col)->value().toString());
+    if(waybillModel->rowCount() > 0) {
+    for(int i=0; i<waybillModel->rowCount(); i++){
+        _rec = waybillModel->record(i);
+        if(_rec.value("Serial").toString() == doc.cellAt(row, col)->value().toInt()){//0
+            if(_rec.value("Date").toString() == doc.cellAt(row, col)->value().toString()){//1
+                return _rec.value("Serial").toInt();
+            } else if(!sc) emit difference();
+              else if(sc) changeRecord(waybillModel, _rec, row, col);
+        } else if(sc) changeRecord(waybillModel, _rec, row, col);
+
+        if(_row == waybillModel->rowCount())
+            return addNewWaybill(row, col);
+    }
+    } else return addNewWaybill(row, col);
 }
 int Importer::findWorkId(int row, int col)
 {
+    int _row = 0;
+    QSqlRecord _rec;
 
+    workModel->setFilter("DateR"+doc.cellAt(row, col)->value().toString());
+    if(workModel->rowCount() > 0) {
+    for(int i=0; i<workModel->rowCount(); i++){
+        _rec = workModel->record(i);
+        if(_rec.value("DateS").toString() == doc.cellAt(row, col)->value().toString()){//4
+            if(_rec.value("DeviceSerial").toInt() == doc.cellAt(row, col)->value().toInt()){//5
+                return _rec.value("WorkId").toInt();
+            } else if(!sc) emit difference();
+              else if(sc) changeRecord(workModel, _rec, row, col);
+        } else if(sc) changeRecord(workModel, _rec, row, col);
+
+        if(_row == workModel->rowCount())
+            return addNewWork(row, col);
+    }
+    } else return addNewWork(row, col);
 }
 int Importer::findRequestId(int row, int col)
 {
+    int _row = 0;
+    QSqlRecord _rec;
 
+    workModel->setFilter("DateR"+doc.cellAt(row, col)->value().toString());
+    if(workModel->rowCount() > 0) {
+    for(int i=0; i<workModel->rowCount(); i++){
+        _rec = workModel->record(i);
+        if(_rec.value("DateS").toString() == doc.cellAt(row, col)->value().toString()){//4
+            if(_rec.value("DeviceSerial").toInt() == doc.cellAt(row, col)->value().toInt()){//5
+                return _rec.value("WorkId").toInt();
+            } else if(!sc) emit difference();
+              else if(sc) changeRecord(workModel, _rec, row, col);
+        } else if(sc) changeRecord(workModel, _rec, row, col);
+
+        if(_row == workModel->rowCount())
+            return addNewWork(row, col);
+    }
+    } else return addNewWork(row, col);
 }
 
 int Importer::changeRecord(QSqlTableModel* model, QSqlRecord* rec, int row, int col)
 {
+    //функция перезаписи данных в БД
+    if(rec->isEmpty()) return 0;
 
+    for(int i=0; i<model->columnCount(); i++,col++) {
+        rec->setValue(i, doc.cellAt(row, col)->value());
+    }
+    if(model->setRecord(rec))
+        return rec->value(0).toInt();//возможна ошибка. запись идет
+                          //по названиям полей, а не по индексу
 }
 
 int Importer::addNewDevType(int row, int col)
@@ -241,7 +247,7 @@ int Importer::addNewDevType(int row, int col)
     QSqlField devT2("Type", QVariant::String);
 
     devT1.setValue(id);
-    devT2.setValue(doc->cellAt(row, col++)->value().toString());
+    devT2.setValue(doc.cellAt(row, col++)->value().toString());
 
     deviceType->append(devT1);
     deviceType->append(devT2);
@@ -253,6 +259,7 @@ int Importer::addNewDevType(int row, int col)
 int Importer::addNewDepart(int row, int col)
 {
     int id = generateDepartId();
+    department->clear();
 
     QSqlField dep1("DepartmentId", QVariant::Int);
     QSqlField dep2("Name", QVariant::String);
@@ -260,32 +267,162 @@ int Importer::addNewDepart(int row, int col)
     QSqlField dep4("Accessories", QVariant::String);
 
     dep1.setValue(id);
-    dep2.setValue(doc->cellAt(row, col++)->value().toString());
-    dep3.setValue(doc->cellAt(row, col++)->value().toString());
-    dep4.setValue(doc->cellAt(row, col)->value().toString());
+    dep2.setValue(doc.cellAt(row, col++)->value().toString());
+    dep3.setValue(doc.cellAt(row, col++)->value().toString());
+    dep4.setValue(doc.cellAt(row, col)->value().toString());
 
     department->append(dep1);
     department->append(dep2);
     department->append(dep3);
     department->append(dep4);
 
-    return departModel->insertRecord(-1, department);
+    if (departModel->insertRecord(-1, department))
+        return id;
+    else return -1;
 }
 int Importer::addNewDevice(int row, int col)
 {
+    int id = generateDeviceId();
+    device->clear();
 
+    QSqlField dev1("Serial", QVariant::Int);
+    QSqlField dev2("Type",QVariant::Int);
+    QSqlField dev3("State",QVariant::Int);
+    QSqlField dev4("Produced",QVariant::String);
+    QSqlField dev5("Varranty",QVariant::Int);
+    QSqlField dev6("Description",QVariant::String);
+    QSqlField dev7("DateVar",QVariant::String);
+    QSqlField dev8("Department",QVariant::Int);
+
+    dev1.setValue(id);
+    dev2.setValue(doc.cellAt(row, col++)->value().toInt());
+    dev3.setValue(doc.cellAt(row, col++)->value().toInt());
+    dev4.setValue(doc.cellAt(row, col++)->value().toString());
+    dev5.setValue(doc.cellAt(row, col++)->value().toInt());
+    dev6.setValue(doc.cellAt(row, col++)->value().toString());
+    dev7.setValue(doc.cellAt(row, col++)->value().toString());
+    dev8.setValue(doc.cellAt(row, col++)->value().toInt());
+
+    device->append(dev1);
+    device->append(dev2);
+    device->append(dev3);
+    device->append(dev4);
+    device->append(dev5);
+    device->append(dev6);
+    device->append(dev7);
+    device->append(dev8);
+
+    if (deviceModel->insertRecord(-1, device))
+        return id;
+    else return -1;
 }
 int Importer::addNewClient(int row, int col)
 {
+    int id = generateClientId();
+    client->clear();
 
+    QSqlField cl1("ClientId", QVariant::Int);
+    QSqlField cl2("Firstname", QVariant::String);
+    QSqlField cl3("Lastname", QVariant::String);
+    QSqlField cl4("Thirdname", QVariant::String);
+    QSqlField cl5("Telefon", QVariant::String);
+    QSqlField cl6("Email", QVariant::String);
+    QSqlField cl7("DepartmentName", QVariant::Int);
+
+    cl1.setValue(id);
+    cl2.setValue(doc.cellAt(row, col++)->value().toString());
+    cl3.setValue(doc.cellAt(row, col++)->value().toString());
+    cl4.setValue(doc.cellAt(row, col++)->value().toString());
+    cl5.setValue(doc.cellAt(row, col++)->value().toString());
+    cl6.setValue(doc.cellAt(row, col++)->value().toString());
+    cl7.setValue(doc.cellAt(row, col++)->value().toInt());
+
+    client->append(cl1);
+    client->append(cl2);
+    client->append(cl3);
+    client->append(cl4);
+    client->append(cl5);
+    client->append(cl6);
+    client->append(cl7);
+
+    if (clientModel->insertRecord(-1, client))
+        return id;
+    else return -1;
 }
 int Importer::addNewWaybill(int row, int col)
 {
+    int id = generateWaybillId();
+    waybill->clear();
 
+    QSqlField wb1("Serial", QVariant::Int);
+    QSqlField wb2("Date", QVariant::String);
+    QSqlField wb3("DepartmentName", QVariant::Int);
+    QSqlField wb4("DepartmentAddress", QVariant::Int);
+    QSqlField wb5("DepartmentAccessories", QVariant::Int);
+    QSqlField wb6("ClientFirstname", QVariant::Int);
+    QSqlField wb7("ClientLastname", QVariant::Int);
+    QSqlField wb8("ClientThirdname", QVariant::Int);
+    QSqlField wb9("ClientTelefon", QVariant::Int);
+    QSqlField wb10("ClientEmail", QVariant::Int);
+
+    wb1.setValue(id);
+    wb2.setValue(doc.cellAt(row, col++)->value().toString());
+    wb3.setValue(doc.cellAt(row, col++)->value().toInt());
+    wb4.setValue(doc.cellAt(row, col++)->value().toInt());
+    wb5.setValue(doc.cellAt(row, col++)->value().toInt());
+    wb6.setValue(doc.cellAt(row, col++)->value().toInt());
+    wb7.setValue(doc.cellAt(row, col++)->value().toInt());
+    wb8.setValue(doc.cellAt(row, col++)->value().toInt());
+    wb9.setValue(doc.cellAt(row, col++)->value().toInt());
+    wb10.setValue(doc.cellAt(row, col++)->value().toInt());
+
+    waybill->append(wb1);
+    waybill->append(wb2);
+    waybill->append(wb3);
+    waybill->append(wb4);
+    waybill->append(wb5);
+    waybill->append(wb6);
+    waybill->append(wb7);
+    waybill->append(wb8);
+    waybill->append(wb9);
+    waybill->append(wb10);
+
+    if (waybillModel->insertRecord(-1, waybill))
+        return id;
+    else return -1;
 }
 int Importer::addNewWork(int row, int col)
 {
+    int id = generateWorkId();
+    work->clear();
 
+    QSqlField wr1("WorkId", QVariant::Int);
+    QSqlField wr2("Malfunctions", QVariant::String);
+    QSqlField wr3("Description", QVariant::String);
+    QSqlField wr4("DateR", QVariant::String);
+    QSqlField wr5("DateS", QVariant::String);
+    QSqlField wr6("DeviceSerial", QVariant::Int);
+    QSqlField wr7("WaybillSerial", QVariant::Int);
+
+    wr1.setValue(id);
+    wr2.setValue(doc.cellAt(row, col++)->value().toString());
+    wr3.setValue(doc.cellAt(row, col++)->value().toString());
+    wr4.setValue(doc.cellAt(row, col++)->value().toString());
+    wr5.setValue(doc.cellAt(row, col++)->value().toString());
+    wr6.setValue(doc.cellAt(row, col++)->value().toInt());
+    wr7.setValue(doc.cellAt(row, col++)->value().toInt());
+
+    work->append(wr1);
+    work->append(wr2);
+    work->append(wr3);
+    work->append(wr4);
+    work->append(wr5);
+    work->append(wr6);
+    work->append(wr7);
+
+    if (workModel->insertRecord(-1, work))
+        return id;
+    else return -1;
 }
 int Importer::addNewRequest(int row, int col)
 {
@@ -294,43 +431,36 @@ int Importer::addNewRequest(int row, int col)
 
 int Importer::generateDevTypeId()
 {
-    uniqueDTid = typeModel->rowCount();
     uniqueDTid += 1;
     return uniqueDTid;
 }
 int Importer::generateDepartId()
 {
-    uniqueDepid = departModel->rowCount();
     uniqueDepid += 1;
     return uniqueDepid;
 }
 int Importer::generateDeviceId()
 {
-    uniqueDevid = deviceModel->rowCount();
     uniqueDevid += 1;
     return uniqueDevid;
 }
 int Importer::generateClientId()
 {
-    uniqueClid = clientModel->rowCount();
     uniqueClid += 1;
     return uniqueClid;
 }
 int Importer::generateWaybillId()
 {
-    uniqueWblid = waybillModel->rowCount();
     uniqueWblid += 1;
     return uniqueWblid;
 }
 int Importer::generateWorkId()
 {
-    uniqueWid = workModel->rowCount();
     uniqueWid += 1;
     return uniqueWid;
 }
 int Importer::generateRequestId()
 {
-    uniqueRqid = requestModel->rowCount();
     uniqueRqid += 1;
     return uniqueRqid;
 }
