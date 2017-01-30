@@ -8,6 +8,8 @@ ClientDialog::ClientDialog(QSqlRelationalTableModel *client, const QSqlRecord &c
 {
     clientTable = client;
     activeDb = dbname;
+    saved = false;
+    uniqueClientId = clientTable->rowCount();
     setupUi(this);
 
     departModel = new QSqlTableModel(this, currentDatabase());
@@ -26,9 +28,16 @@ ClientDialog::ClientDialog(QSqlRelationalTableModel *client, const QSqlRecord &c
     EmailEdit->setText(clientData.value("Email").toString());
 
     connect(newDepBtn, SIGNAL(clicked()), this, SLOT(createNewDepart()));
+    connect(saveButton, SIGNAL(clicked()), this, SLOT());
     connect(buttonBox, SIGNAL(accepted()), this, SLOT(submit()));
     connect(buttonBox, SIGNAL(rejected()), this, SLOT(close()));
 
+    connect(FirstnameEdit, SIGNAL(editingFinished()), this, SLOT(editingFinished()));
+    connect(LastnameEdit, SIGNAL(editingFinished()), this, SLOT(editingFinished()));
+    connect(ThirdnameEdit, SIGNAL(editingFinished()), this, SLOT(editingFinished()));
+    connect(TelephoneEdit, SIGNAL(editingFinished()), this, SLOT(editingFinished()));
+    connect(EmailEdit, SIGNAL(editingFinished()), this, SLOT(editingFinished()));
+    connect(comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(editingFinished()));
 }
 
 ClientDialog::~ClientDialog()
@@ -38,6 +47,31 @@ ClientDialog::~ClientDialog()
 QSqlDatabase ClientDialog::currentDatabase() const
 {
     return QSqlDatabase::database(activeDb);
+}
+
+void ClientDialog::editingFinished()
+{
+    saved = false;
+    saveButton->setEnabled(!saved);
+}
+
+bool ClientDialog::save()
+{
+    QString Firstname = FirstnameEdit->text();
+    QString Lastname = LastnameEdit->text();
+    QString Thirdname = ThirdnameEdit->text();
+    QString Telephone = TelephoneEdit->text();
+    QString Email = EmailEdit->text();
+    int DepId = comboBox->currentIndex();
+
+    if(Firstname.isEmpty() || Lastname.isEmpty()) {
+        QString message(tr("Пожалуйста, заполните обязательные поля."));
+        QMessageBox::information(this, tr("Добавить представитель заказчика"), message);
+    } else {
+        clientId = findClientId();
+        saved = true;
+        saveButton->setEnabled(!saved);
+    }
 }
 
 void ClientDialog::submit()
@@ -53,8 +87,8 @@ void ClientDialog::submit()
         QString message(tr("Пожалуйста, заполните обязательные поля."));
         QMessageBox::information(this, tr("Добавить представитель заказчика"), message);
     } else {
-        int clientId = findClientId();
-
+        clientId = findClientId();//начало процесса записи через поиск
+        saved = true;
         accept();
     }
 }
@@ -125,7 +159,6 @@ int ClientDialog::addNewClient()
 
 int ClientDialog::generateClientId()
 {
-    uniqueClientId = clientTable->rowCount();
     uniqueClientId += 1;
     return uniqueClientId;
 }

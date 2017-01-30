@@ -26,7 +26,10 @@ SOURCES += main.cpp\
     waybillbrowser.cpp \
     repairdialog.cpp \
     importer.cpp \
-    accessdialog.cpp
+    accessdialog.cpp \
+    clientcontroldialog.cpp \
+    departcontroldialog.cpp \
+    devtypecontroldialog.cpp
 
 
 HEADERS  += \
@@ -42,7 +45,10 @@ HEADERS  += \
     startpage.h \
     repairdialog.h \
     importer.h \
-    accessdialog.h
+    accessdialog.h \
+    clientcontroldialog.h \
+    departcontroldialog.h \
+    devtypecontroldialog.h
 
 FORMS    += \
     waybillbrowser.ui \

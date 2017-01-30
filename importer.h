@@ -13,13 +13,12 @@ public:
     explicit Importer(QObject *parent = 0);
 
     void requestWork(const QString fname, const QString dbname, const QStringList dblist);
+    void abort();
 
 signals:
     void progress(int i);
-    void difference(QSqlRecord &rec);//сигнал для открытия диалога о перезаписи совместимостей
-
-public slots:
-    bool saveDifference();
+    void difference(QSqlTableModel *table, QSqlRecord recordO,
+                    QSqlRecord recordN);//сигнал для открытия диалога о перезаписи совместимостей
 
 private:
     QSqlDatabase currentDatabase() const;
@@ -34,7 +33,7 @@ private:
     int findWorkId(int row, int col);
     int findRequestId(int row, int col);
 
-    int changeRecord(QSqlTableModel* model, QSqlRecord* rec, int row, int col);
+    int changeRecord(QSqlTableModel* model, QSqlRecord rec, int row, int col);
 
     int addNewDepart(int row, int col);
     int addNewDevType(int row, int col);
@@ -64,13 +63,13 @@ private:
     int uniqueWid;
     int uniqueRqid;
 
-    QSqlRecord* deviceType;
-    QSqlRecord* department;
-    QSqlRecord* device;
-    QSqlRecord* client;
-    QSqlRecord* waybill;
-    QSqlRecord* work;
-    QSqlRecord* request;
+    QSqlRecord deviceType;
+    QSqlRecord department;
+    QSqlRecord device;
+    QSqlRecord client;
+    QSqlRecord waybill;
+    QSqlRecord work;
+    QSqlRecord request;
 
     QSqlTableModel* typeModel;
     QSqlTableModel* departModel;

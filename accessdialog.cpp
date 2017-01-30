@@ -33,9 +33,8 @@ AccessDialog::~AccessDialog()
 void AccessDialog::submit()
 {
     recN.setValue(0,recO.value(0));
-    if(model->setRecord(rec))
+    if(model->setRecord(recN.value(0).toInt(),recN))
         accept();
-    else break;
 }
 
 bool AccessDialog::getSC()

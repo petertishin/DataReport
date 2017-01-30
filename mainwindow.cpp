@@ -13,7 +13,7 @@
 #include <QtXml>
 #include <QtSql>
 
-extern bool sc = false;//save changes
+extern bool sc;//save changes
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
@@ -64,7 +64,7 @@ void MainWindow::addConnection()
         //QSqlDatabase db = QSqlDatabase::addDatabase(dialog.databaseName());
         //db.setDatabaseName(dbname);
         //db.open();
-        QString dbname = "C:/QtProjects/tutorials/DataBase/SQLbasetysql.sqlite";
+        QString dbname = "../custombase.sqlite";
         QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
         db.setDatabaseName(dbname);
         db.open();
@@ -290,9 +290,10 @@ void MainWindow::openDialExcelBrowser()
     QProgressDialog* pprd = new QProgressDialog("Импортирование данных...", "Отмена", 0, 10000);
     pprd->setWindowTitle("Пожалуйста, подождите...");
 
-    connect(importer, SIGNAL(finished()), this, SLOT());
-    connect(importer, SIGNAL(progress(int)), pprd, SLOT(setValue(int));
-    connect(importer, SIGNAL(saveDifference()), this, SLOT(openAccessDial()));
+    connect(importer, SIGNAL(finished()), pprd, SLOT(close()));
+    connect(importer, SIGNAL(progress(int)), pprd, SLOT(setValue(int)));
+    connect(importer, SIGNAL(difference(QSqlTableModel*,QSqlRecord,QSqlRecord)),
+            this, SLOT(openAccessDial(QSqlTableModel*,QSqlRecord,QSqlRecord)));
 
     importer->requestWork(fileName, activeDb, tables);
     thread->start();
@@ -310,9 +311,10 @@ void MainWindow::openDialExcelBrowser()
 //функция открытия диалога с предупреждением о совпадении данных
 //при импортировании БД. Вопрос о перезаписи/замене данных или
 //пропуске
-void MainWindow::openAccessDial(QSqlRecord record)
+void MainWindow::openAccessDial(QSqlTableModel *table, QSqlRecord recordO,
+                                QSqlRecord recordN)
 {
-    AccessDialog *dialog = new AccessDialog(record,);
+    AccessDialog *dialog = new AccessDialog(table, recordO, recordN);
 
     int accepted = dialog->exec();
 

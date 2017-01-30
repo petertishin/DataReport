@@ -1,16 +1,17 @@
 #include "importer.h"
 
-bool sc;
+bool sc = false;
 
+//конструктор
 Importer::Importer(QObject *parent) :
     QObject(parent)
 {
 }
-
+//задание аргументов и запрос работы
 void Importer::requestWork(const QString fname, const QString dbname, const QStringList dblist)
 {
     activeDb = dbname;
-    doc = QXlsx::Document(fname);
+    QXlsx::Document doc(fname);
 
     departModel = new QSqlTableModel(this, currentDatabase());
     departModel->setTable(dblist.at(0));
@@ -49,30 +50,29 @@ void Importer::requestWork(const QString fname, const QString dbname, const QStr
 
     readRecords();
 }
-
+//прерывание потока
 void Importer::abort()
 {
 
 }
-
+//private функция обрашения к БД
 QSqlDatabase Importer::currentDatabase() const
 {
     return QSqlDatabase::database(activeDb);
 }
-
+//чтение импортируемого файла и сравнение значений с записями в БД
 void Importer::readRecords()
 {
-    bool save=false, toAll=false;
     int row, col;
-
+    //порядок проработки документа
     while(!doc.cellAt(row, col)->value().toString().isNull()) {
-        findDevTypeId(row, col);
-        findDepartId(row, col);
+        findDevTypeId(row, col);//отдельный лист
+        findDepartId(row, col);//отдельный лист с клиентами
         findDeviceId(row, col);
-        findClientId(row, col);
+        findClientId(row, col);//отдельный лист с департаментами
         findWaybillId(row, col);
-        findWorkId(row, col);
-        findRequestId(row, col);
+        findWorkId(row, col);//начальная страница
+        findRequestId(row, col);//отдельная страница
 
     }
 }
@@ -106,9 +106,9 @@ int Importer::findDepartId(int row, int col)
                 if((_rec.value("Address").toString() == doc.cellAt(row, col)->value().toString()) &&
                    (_rec.value("Accessories").toString() == doc.cellAt(row, col)->value().toString())){
                     return _rec.value("DepartmentId").toInt();
-                } else if(!sc) emit difference();
-                  else if(sc) emit changeRecord(departModel, _rec, row, col);
-            } else if(sc) emit changeRecord(departModel, _rec, row, col);
+                } else if(!sc) emit difference(departModel, _rec, _rec);
+                  else if(sc) changeRecord(departModel, _rec, row, col);
+            } else if(sc) changeRecord(departModel, _rec, row, col);
         }
         ++_row;
     }
@@ -128,7 +128,7 @@ int Importer::findDeviceId(int row, int col)
                 if(_rec.value("Produced").toString() == doc.cellAt(row, col)->value().toString()){//3
                     if(_rec.value("Department").toInt() == doc.cellAt(row, col)->value().toInt()){//7
                         return _rec.value("Serial").toInt();
-                    } else if(!sc) emit difference(deviceModel,_rec, ); //строй всю логику на этом примере!!
+                    } else if(!sc) emit difference(deviceModel, _rec, _rec); //строй всю логику на этом примере!!
                       else if(sc) changeRecord(deviceModel, _rec, row, col);
                 } else if(sc) changeRecord(deviceModel, _rec, row, col);
             } else if(sc) changeRecord(deviceModel, _rec, row, col);
@@ -153,7 +153,7 @@ int Importer::findClientId(int row, int col)
                     //if(_rec.value("DepartmentName").toInt() == doc.cellAt(row, col)->value().toInt()){//6
                         return _rec.value("ClientId").toInt();
                     //else emit saveDifference();
-                } else if(!sc) emit difference();
+                } else if(!sc) emit difference(clientModel, _rec, _rec);
                   else if(sc) return changeRecord(clientModel, _rec, row, col);
             } else if(sc) return changeRecord(clientModel, _rec, row, col);
         }
@@ -171,10 +171,10 @@ int Importer::findWaybillId(int row, int col)
     if(waybillModel->rowCount() > 0) {
     for(int i=0; i<waybillModel->rowCount(); i++){
         _rec = waybillModel->record(i);
-        if(_rec.value("Serial").toString() == doc.cellAt(row, col)->value().toInt()){//0
+        if(_rec.value("Serial").toInt() == doc.cellAt(row, col)->value().toInt()){//0
             if(_rec.value("Date").toString() == doc.cellAt(row, col)->value().toString()){//1
                 return _rec.value("Serial").toInt();
-            } else if(!sc) emit difference();
+            } else if(!sc) emit difference(waybillModel, _rec, _rec);
               else if(sc) changeRecord(waybillModel, _rec, row, col);
         } else if(sc) changeRecord(waybillModel, _rec, row, col);
 
@@ -195,7 +195,7 @@ int Importer::findWorkId(int row, int col)
         if(_rec.value("DateS").toString() == doc.cellAt(row, col)->value().toString()){//4
             if(_rec.value("DeviceSerial").toInt() == doc.cellAt(row, col)->value().toInt()){//5
                 return _rec.value("WorkId").toInt();
-            } else if(!sc) emit difference();
+            } else if(!sc) emit difference(workModel, _rec, _rec);
               else if(sc) changeRecord(workModel, _rec, row, col);
         } else if(sc) changeRecord(workModel, _rec, row, col);
 
@@ -209,33 +209,34 @@ int Importer::findRequestId(int row, int col)
     int _row = 0;
     QSqlRecord _rec;
 
-    workModel->setFilter("DateR"+doc.cellAt(row, col)->value().toString());
-    if(workModel->rowCount() > 0) {
-    for(int i=0; i<workModel->rowCount(); i++){
-        _rec = workModel->record(i);
+    requestModel->setFilter("Date"+doc.cellAt(row, col)->value().toString());
+    if(requestModel->rowCount() > 0) {
+    for(int i=0; i<requestModel->rowCount(); i++){
+        _rec = requestModel->record(i);
         if(_rec.value("DateS").toString() == doc.cellAt(row, col)->value().toString()){//4
-            if(_rec.value("DeviceSerial").toInt() == doc.cellAt(row, col)->value().toInt()){//5
-                return _rec.value("WorkId").toInt();
-            } else if(!sc) emit difference();
-              else if(sc) changeRecord(workModel, _rec, row, col);
-        } else if(sc) changeRecord(workModel, _rec, row, col);
+            if(clientModel->data(clientModel->index(_rec.value("Lastname").toInt(),2)).toString() ==
+                    doc.cellAt(row, col)->value().toString()){//3
+                return _rec.value("RequestId").toInt();
+            } else if(!sc) emit difference(requestModel, _rec, _rec);
+              else if(sc) changeRecord(requestModel, _rec, row, col);
+        } else if(sc) changeRecord(requestModel, _rec, row, col);
 
-        if(_row == workModel->rowCount())
-            return addNewWork(row, col);
+        if(_row == requestModel->rowCount())
+            return addNewRequest(row, col);
     }
-    } else return addNewWork(row, col);
+    } else return addNewRequest(row, col);
 }
 
-int Importer::changeRecord(QSqlTableModel* model, QSqlRecord* rec, int row, int col)
+int Importer::changeRecord(QSqlTableModel* model, QSqlRecord rec, int row, int col)
 {
     //функция перезаписи данных в БД
-    if(rec->isEmpty()) return 0;
+    if(rec.isEmpty()) return 0;
 
     for(int i=0; i<model->columnCount(); i++,col++) {
-        rec->setValue(i, doc.cellAt(row, col)->value());
+        rec.setValue(i, doc.cellAt(row, col)->value());
     }
-    if(model->setRecord(rec))
-        return rec->value(0).toInt();//возможна ошибка. запись идет
+    if(model->setRecord(rec.value(0).toInt(), rec))
+        return rec.value(0).toInt();//возможна ошибка. запись идет
                           //по названиям полей, а не по индексу
 }
 
@@ -249,8 +250,8 @@ int Importer::addNewDevType(int row, int col)
     devT1.setValue(id);
     devT2.setValue(doc.cellAt(row, col++)->value().toString());
 
-    deviceType->append(devT1);
-    deviceType->append(devT2);
+    deviceType.append(devT1);
+    deviceType.append(devT2);
 
     if (typeModel->insertRecord(-1, deviceType))
         return id;
@@ -259,7 +260,7 @@ int Importer::addNewDevType(int row, int col)
 int Importer::addNewDepart(int row, int col)
 {
     int id = generateDepartId();
-    department->clear();
+    department.clear();
 
     QSqlField dep1("DepartmentId", QVariant::Int);
     QSqlField dep2("Name", QVariant::String);
@@ -271,10 +272,10 @@ int Importer::addNewDepart(int row, int col)
     dep3.setValue(doc.cellAt(row, col++)->value().toString());
     dep4.setValue(doc.cellAt(row, col)->value().toString());
 
-    department->append(dep1);
-    department->append(dep2);
-    department->append(dep3);
-    department->append(dep4);
+    department.append(dep1);
+    department.append(dep2);
+    department.append(dep3);
+    department.append(dep4);
 
     if (departModel->insertRecord(-1, department))
         return id;
@@ -283,7 +284,7 @@ int Importer::addNewDepart(int row, int col)
 int Importer::addNewDevice(int row, int col)
 {
     int id = generateDeviceId();
-    device->clear();
+    device.clear();
 
     QSqlField dev1("Serial", QVariant::Int);
     QSqlField dev2("Type",QVariant::Int);
@@ -303,14 +304,14 @@ int Importer::addNewDevice(int row, int col)
     dev7.setValue(doc.cellAt(row, col++)->value().toString());
     dev8.setValue(doc.cellAt(row, col++)->value().toInt());
 
-    device->append(dev1);
-    device->append(dev2);
-    device->append(dev3);
-    device->append(dev4);
-    device->append(dev5);
-    device->append(dev6);
-    device->append(dev7);
-    device->append(dev8);
+    device.append(dev1);
+    device.append(dev2);
+    device.append(dev3);
+    device.append(dev4);
+    device.append(dev5);
+    device.append(dev6);
+    device.append(dev7);
+    device.append(dev8);
 
     if (deviceModel->insertRecord(-1, device))
         return id;
@@ -319,7 +320,7 @@ int Importer::addNewDevice(int row, int col)
 int Importer::addNewClient(int row, int col)
 {
     int id = generateClientId();
-    client->clear();
+    client.clear();
 
     QSqlField cl1("ClientId", QVariant::Int);
     QSqlField cl2("Firstname", QVariant::String);
@@ -337,13 +338,13 @@ int Importer::addNewClient(int row, int col)
     cl6.setValue(doc.cellAt(row, col++)->value().toString());
     cl7.setValue(doc.cellAt(row, col++)->value().toInt());
 
-    client->append(cl1);
-    client->append(cl2);
-    client->append(cl3);
-    client->append(cl4);
-    client->append(cl5);
-    client->append(cl6);
-    client->append(cl7);
+    client.append(cl1);
+    client.append(cl2);
+    client.append(cl3);
+    client.append(cl4);
+    client.append(cl5);
+    client.append(cl6);
+    client.append(cl7);
 
     if (clientModel->insertRecord(-1, client))
         return id;
@@ -352,7 +353,7 @@ int Importer::addNewClient(int row, int col)
 int Importer::addNewWaybill(int row, int col)
 {
     int id = generateWaybillId();
-    waybill->clear();
+    waybill.clear();
 
     QSqlField wb1("Serial", QVariant::Int);
     QSqlField wb2("Date", QVariant::String);
@@ -376,16 +377,16 @@ int Importer::addNewWaybill(int row, int col)
     wb9.setValue(doc.cellAt(row, col++)->value().toInt());
     wb10.setValue(doc.cellAt(row, col++)->value().toInt());
 
-    waybill->append(wb1);
-    waybill->append(wb2);
-    waybill->append(wb3);
-    waybill->append(wb4);
-    waybill->append(wb5);
-    waybill->append(wb6);
-    waybill->append(wb7);
-    waybill->append(wb8);
-    waybill->append(wb9);
-    waybill->append(wb10);
+    waybill.append(wb1);
+    waybill.append(wb2);
+    waybill.append(wb3);
+    waybill.append(wb4);
+    waybill.append(wb5);
+    waybill.append(wb6);
+    waybill.append(wb7);
+    waybill.append(wb8);
+    waybill.append(wb9);
+    waybill.append(wb10);
 
     if (waybillModel->insertRecord(-1, waybill))
         return id;
@@ -393,8 +394,41 @@ int Importer::addNewWaybill(int row, int col)
 }
 int Importer::addNewWork(int row, int col)
 {
+    int id = generateRequestId();
+    request.clear();
+
+    QSqlField rq1("RequestId", QVariant::Int);
+    QSqlField rq2("Date", QVariant::String);
+    QSqlField rq3("ClientFirstname", QVariant::Int);
+    QSqlField rq4("ClientLastname", QVariant::Int);
+    QSqlField rq5("ClientThirdname", QVariant::Int);
+    QSqlField rq6("DepartmentName", QVariant::Int);
+    QSqlField rq7("WorkId", QVariant::Int);
+
+    rq1.setValue(id);
+    rq2.setValue(doc.cellAt(row, col++)->value().toString());
+    rq3.setValue(doc.cellAt(row, col++)->value().toString());
+    rq4.setValue(doc.cellAt(row, col++)->value().toString());
+    rq5.setValue(doc.cellAt(row, col++)->value().toString());
+    rq6.setValue(doc.cellAt(row, col++)->value().toInt());
+    rq7.setValue(doc.cellAt(row, col++)->value().toInt());
+
+    request.append(rq1);
+    request.append(rq2);
+    request.append(rq3);
+    request.append(rq4);
+    request.append(rq5);
+    request.append(rq6);
+    request.append(rq7);
+
+    if (requestModel->insertRecord(-1, request))
+        return id;
+    else return -1;
+}
+int Importer::addNewRequest(int row, int col)
+{
     int id = generateWorkId();
-    work->clear();
+    work.clear();
 
     QSqlField wr1("WorkId", QVariant::Int);
     QSqlField wr2("Malfunctions", QVariant::String);
@@ -412,21 +446,17 @@ int Importer::addNewWork(int row, int col)
     wr6.setValue(doc.cellAt(row, col++)->value().toInt());
     wr7.setValue(doc.cellAt(row, col++)->value().toInt());
 
-    work->append(wr1);
-    work->append(wr2);
-    work->append(wr3);
-    work->append(wr4);
-    work->append(wr5);
-    work->append(wr6);
-    work->append(wr7);
+    work.append(wr1);
+    work.append(wr2);
+    work.append(wr3);
+    work.append(wr4);
+    work.append(wr5);
+    work.append(wr6);
+    work.append(wr7);
 
     if (workModel->insertRecord(-1, work))
         return id;
     else return -1;
-}
-int Importer::addNewRequest(int row, int col)
-{
-
 }
 
 int Importer::generateDevTypeId()

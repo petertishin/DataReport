@@ -35,7 +35,7 @@ public slots:
     void openWaybillEdit(const QSqlRecord &record);
     void openDeviceEdit(const QSqlRecord &record);
     void openDialExcelBrowser();
-    void openAccessDial();
+    void openAccessDial(QSqlTableModel *table, QSqlRecord recordO, QSqlRecord recordN);
 
 signals:
     void statusMessage(const QString &message);

@@ -22,6 +22,8 @@ public:
     int getDepartName();
 
 private slots:
+    void editingFinished();//изменение статуса сохранения после редактирования
+    bool save();
     void submit();//подтверждение данных и их запись в базу
     void createNewDepart();
 
@@ -37,6 +39,8 @@ private:
     QSqlRelationalTableModel *clientTable;
     QSqlTableModel *departModel;
     QString activeDb;
+    bool saved;
+    int clientId;
 
 };
 
