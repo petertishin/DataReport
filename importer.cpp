@@ -1,13 +1,15 @@
 #include "importer.h"
 
+//Замена всех совпадений на новые
 bool sc = false;
 
-//конструктор
+//Конструктор
 Importer::Importer(QObject *parent) :
     QObject(parent)
 {
 }
-//задание аргументов и запрос работы
+
+//Задание аргументов и запрос работы
 void Importer::requestWork(const QString fname, const QString dbname, const QStringList dblist)
 {
     activeDb = dbname;
@@ -50,17 +52,20 @@ void Importer::requestWork(const QString fname, const QString dbname, const QStr
 
     readRecords();
 }
-//прерывание потока
+
+//Прерывание потока
 void Importer::abort()
 {
 
 }
+
 //private функция обрашения к БД
 QSqlDatabase Importer::currentDatabase() const
 {
     return QSqlDatabase::database(activeDb);
 }
-//чтение импортируемого файла и сравнение значений с записями в БД
+
+//Чтение импортируемого файла и сравнение значений с записями в БД
 void Importer::readRecords()
 {
     int row, col;
@@ -79,6 +84,7 @@ void Importer::readRecords()
     emit finished();
 }
 
+//Поиск идентификатора записи по данным
 int Importer::findDevTypeId(int row, int col)
 {
     int _row = 0;
@@ -149,8 +155,8 @@ int Importer::findClientId(int row, int col)
     if(clientModel->rowCount() > 0){
     for(int i=0; i<clientModel->rowCount(); i++){
         _rec = clientModel->record(i);
-        if(_rec.value("Firstname").toString() == doc.cellAt(row, col)->value().toString()){//1
-            if(_rec.value("Lastname").toString() == doc.cellAt(row, col)->value().toString()){//2
+        if(_rec.value("Lastname").toString() == doc.cellAt(row, col)->value().toString()){//1
+            if(_rec.value("Firstname").toString() == doc.cellAt(row, col)->value().toString()){//2
                 if(_rec.value("Thirdname").toString() == doc.cellAt(row, col)->value().toString()){//3
                     //if(_rec.value("DepartmentName").toInt() == doc.cellAt(row, col)->value().toInt()){//6
                         return _rec.value("ClientId").toInt();
@@ -229,6 +235,7 @@ int Importer::findRequestId(int row, int col)
     } else return addNewRequest(row, col);
 }
 
+//Замена записи
 int Importer::changeRecord(QSqlTableModel* model, QSqlRecord rec, int row, int col)
 {
     //функция перезаписи данных в БД
@@ -242,6 +249,7 @@ int Importer::changeRecord(QSqlTableModel* model, QSqlRecord rec, int row, int c
                           //по названиям полей, а не по индексу
 }
 
+//Добавление новой записи в базу данных
 int Importer::addNewDevType(int row, int col)
 {
     int id = generateDevTypeId();
@@ -325,8 +333,8 @@ int Importer::addNewClient(int row, int col)
     client.clear();
 
     QSqlField cl1("ClientId", QVariant::Int);
-    QSqlField cl2("Firstname", QVariant::String);
-    QSqlField cl3("Lastname", QVariant::String);
+    QSqlField cl2("Lastname", QVariant::String);
+    QSqlField cl3("Firstname", QVariant::String);
     QSqlField cl4("Thirdname", QVariant::String);
     QSqlField cl5("Telefon", QVariant::String);
     QSqlField cl6("Email", QVariant::String);
@@ -461,6 +469,7 @@ int Importer::addNewRequest(int row, int col)
     else return -1;
 }
 
+//Генерация новых идентификаторов для новых записей
 int Importer::generateDevTypeId()
 {
     uniqueDTid += 1;

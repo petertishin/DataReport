@@ -52,9 +52,8 @@
      <property name="title">
       <string>Управление</string>
      </property>
+     <addaction name="departVieweraction"/>
      <addaction name="deviceAction"/>
-     <addaction name="clientAction"/>
-     <addaction name="departmentAction"/>
     </widget>
     <addaction name="menu"/>
    </widget>
@@ -95,14 +94,12 @@
     <string>Устройства</string>
    </property>
   </action>
-  <action name="clientAction">
+  <action name="departVieweraction">
    <property name="text">
-    <string>Клиенты</string>
+    <string>Заказчики</string>
    </property>
-  </action>
-  <action name="departmentAction">
-   <property name="text">
-    <string>Подразделения</string>
+   <property name="toolTip">
+    <string>Заказчики</string>
    </property>
   </action>
  </widget>

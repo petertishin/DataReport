@@ -2,10 +2,10 @@
 #define CLIENTCONTROLDIALOG_H
 
 #include <QDialog>
+#include <QDataWidgetMapper>
 #include "ui_clientcontroldialog.h"
 
 class QComboBox;
-class QDataWidgetMapper;
 class QDateEdit;
 class QDialogButtonBox;
 class QGroupBox;

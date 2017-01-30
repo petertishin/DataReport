@@ -87,8 +87,8 @@ void WaybillBrowser::showTable(const QString &t)
     model->setRelation(2, QSqlRelation("Department", "DepartmentId", "Name"));
     model->setRelation(3, QSqlRelation("Department", "DepartmentId", "Address"));
     model->setRelation(4, QSqlRelation("Department", "DepartmentId", "Accessories"));
-    model->setRelation(5, QSqlRelation("Client", "ClientId", "Firstname"));
-    model->setRelation(6, QSqlRelation("Client", "ClientId", "Lastname"));
+    model->setRelation(5, QSqlRelation("Client", "ClientId", "Lastname"));
+    model->setRelation(6, QSqlRelation("Client", "ClientId", "Firstname"));
     model->setRelation(7, QSqlRelation("Client", "ClientId", "Thirdname"));
     model->setRelation(8, QSqlRelation("Client", "ClientId", "Telefon"));
     model->setRelation(9, QSqlRelation("Client", "ClientId", "Email"));
@@ -99,8 +99,8 @@ void WaybillBrowser::showTable(const QString &t)
     model->setHeaderData(2, Qt::Horizontal, QObject::tr("Подразделение"));
     model->setHeaderData(3, Qt::Horizontal, QObject::tr("Адрес"));
     model->setHeaderData(4, Qt::Horizontal, QObject::tr("Реквизиты"));
-    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Имя"));
-    model->setHeaderData(6, Qt::Horizontal, QObject::tr("Фамилия"));
+    model->setHeaderData(5, Qt::Horizontal, QObject::tr("Фамилия"));
+    model->setHeaderData(6, Qt::Horizontal, QObject::tr("Имя"));
     model->setHeaderData(7, Qt::Horizontal, QObject::tr("Отчество"));
     model->setHeaderData(8, Qt::Horizontal, QObject::tr("Телефон"));
     model->setHeaderData(9, Qt::Horizontal, QObject::tr("Email"));

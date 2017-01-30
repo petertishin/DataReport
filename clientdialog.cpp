@@ -28,7 +28,7 @@ ClientDialog::ClientDialog(QSqlRelationalTableModel *client, const QSqlRecord &c
     EmailEdit->setText(clientData.value("Email").toString());
 
     connect(newDepBtn, SIGNAL(clicked()), this, SLOT(createNewDepart()));
-    connect(saveButton, SIGNAL(clicked()), this, SLOT());
+    connect(saveButton, SIGNAL(clicked()), this, SLOT(save()));
     connect(buttonBox, SIGNAL(accepted()), this, SLOT(submit()));
     connect(buttonBox, SIGNAL(rejected()), this, SLOT(close()));
 
@@ -59,10 +59,10 @@ bool ClientDialog::save()
 {
     QString Firstname = FirstnameEdit->text();
     QString Lastname = LastnameEdit->text();
-    QString Thirdname = ThirdnameEdit->text();
-    QString Telephone = TelephoneEdit->text();
-    QString Email = EmailEdit->text();
-    int DepId = comboBox->currentIndex();
+    //QString Thirdname = ThirdnameEdit->text();
+    //QString Telephone = TelephoneEdit->text();
+    //QString Email = EmailEdit->text();
+    //int DepId = comboBox->currentIndex();
 
     if(Firstname.isEmpty() || Lastname.isEmpty()) {
         QString message(tr("Пожалуйста, заполните обязательные поля."));
@@ -72,16 +72,18 @@ bool ClientDialog::save()
         saved = true;
         saveButton->setEnabled(!saved);
     }
+
+    return saved;
 }
 
 void ClientDialog::submit()
 {
     QString Firstname = FirstnameEdit->text();
     QString Lastname = LastnameEdit->text();
-    QString Thirdname = ThirdnameEdit->text();
-    QString Telephone = TelephoneEdit->text();
-    QString Email = EmailEdit->text();
-    int DepId = comboBox->currentIndex();
+    //QString Thirdname = ThirdnameEdit->text();
+    //QString Telephone = TelephoneEdit->text();
+    //QString Email = EmailEdit->text();
+    //int DepId = comboBox->currentIndex();
 
     if(Firstname.isEmpty() || Lastname.isEmpty()) {
         QString message(tr("Пожалуйста, заполните обязательные поля."));
@@ -130,16 +132,16 @@ int ClientDialog::addNewClient()
     int id = generateClientId();
 
     QSqlField f1("ClientId", QVariant::Int);
-    QSqlField f2("Firstname", QVariant::String);
-    QSqlField f3("Lastname", QVariant::String);
+    QSqlField f2("Lastname", QVariant::String);
+    QSqlField f3("Firstname", QVariant::String);
     QSqlField f4("Thirdname", QVariant::String);
     QSqlField f5("Telefon", QVariant::String);
     QSqlField f6("Email", QVariant::String);
     QSqlField f7("DepartmentName", QVariant::Int);
 
     f1.setValue(QVariant(id));
-    f2.setValue(QVariant(FirstnameEdit->text()));
-    f3.setValue(QVariant(LastnameEdit->text()));
+    f2.setValue(QVariant(LastnameEdit->text()));
+    f3.setValue(QVariant(FirstnameEdit->text()));
     f4.setValue(QVariant(ThirdnameEdit->text()));
     f5.setValue(QVariant(TelephoneEdit->text()));
     f6.setValue(QVariant(EmailEdit->text()));

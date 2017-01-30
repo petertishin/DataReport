@@ -6,10 +6,10 @@
 #include "devicewidget.h"
 #include "accessdialog.h"
 #include "qsqlconnectiondialog.h"
-//#include "clientcontroldialog.h"
-//#include "departcontroldialog.h"
-//#include "devicecontroldialog.h"
-//#include "xlsxdocument.h"
+#include "departclientviewer.h"
+#include "clientcontroldialog.h"
+#include "departcontroldialog.h"
+#include "devicecontroldialog.h"
 
 #include <QFileDialog>
 #include <QProgressDialog>
@@ -25,9 +25,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     StartPage *startpage = new StartPage(activeDb, tables, tab);
     TabWidget->setCurrentWidget(startpage);
     
-    //connect(clientAction, SIGNAL(triggered()), this, SLOT(showClientControlDialog())));
-    //connect(departAction, SIGNAL(triggered()), this, SLOT(showDepartControlDialog())));
-    //connect(deviceAction, SIGNAL(triggered()), this, SLOT(showDeviceControlDialog())));
+    connect(departVieweraction, SIGNAL(triggered()), this, SLOT(showDepartClientViewer()));
+    //connect(deviceAction, SIGNAL(triggered()), this, SLOT(showDeviceControlDialog()));
     connect(startpage, SIGNAL(openWaybillBrowser()), this, SLOT(openWaybillBrowser()));
     connect(startpage, SIGNAL(openDeviceBrowser()), this, SLOT(openDeviceBrowser()));
     connect(startpage, SIGNAL(openRepair()), this, SLOT(openRepair()));
@@ -81,7 +80,7 @@ void MainWindow::addConnection()
 
         q.exec("CREATE TABLE Type (TypeId int primary key, Type varchar)");
 
-        q.exec("CREATE TABLE Client (ClientId int primary key, Firstname varchar, Lastname varchar, Thirdname varchar, "
+        q.exec("CREATE TABLE Client (ClientId int primary key, Lastname varchar, Firstname varchar, Thirdname varchar, "
                                     "Telefon varchar, Email varchar, DepartmentName int)");
 
         q.exec("CREATE TABLE Device (Serial int primary key, Type int, State int, Produced varchar, "
@@ -102,6 +101,10 @@ void MainWindow::addConnection()
         q.exec("CREATE TABLE State (StateId int primary key, State varchar)");
 
         q.exec("CREATE TABLE Varranty (VarrantyId int primary key, Varranty varchar)");
+
+        q.exec("CREATE TABLE Sets (SetsId int primary key, Name varchar, TypeId int)");
+
+        q.exec("CREATE TABLE Komplekt (KomplektId int primary key, SetsId int, WorkId int)");
 
     } else {
         QSqlError err = addConnection(dialog.driverName(), dialog.databaseName(), dialog.hostName(),
@@ -136,32 +139,36 @@ QSqlError MainWindow::addConnection(const QString &driver, const QString &dbName
 void MainWindow::createMemoryDatabase(QSqlDatabase &db)
 {
     QSqlQuery q("", db);
-
+    //0  таблица департаментов
     q.exec("CREATE TABLE Department (DepartmentId int primary key, Name varchar, Address varchar, Accessories varchar)");
-
+    //1  таблица типов устройств
     q.exec("CREATE TABLE Type (TypeId int primary key, Type varchar)");
-
-    q.exec("CREATE TABLE Client (ClientId int primary key, Firstname varchar, Lastname varchar, Thirdname varchar, "
+    //2  таблица клиентов
+    q.exec("CREATE TABLE Client (ClientId int primary key, Lastname varchar, Firstname varchar, Thirdname varchar, "
                                 "Telefon varchar, Email varchar, DepartmentName int)");
-
+    //3  таблица устройств
     q.exec("CREATE TABLE Device (Serial int primary key, Type int, State int, Produced varchar, "
                                 "Varranty int, Description varchar, DateVar varchar, Department int)");
-
+    //4  таблица накладных
     q.exec("CREATE TABLE Waybill (Serial int primary key, Date varchar, "
                                  "DepartmentName int, DepartmentAddress int, DepartmentAccessories int, "
                                  "ClientFirstname int, ClientLastname int, ClientThirdname int, "
                                  "ClientTelefon int, ClientEmail int)");
-
+    //5  таблица ремонта
     q.exec("CREATE TABLE Work (WorkId int primary key, Malfunctions varchar, Description varchar, DateR varchar, "
                               "DateS varchar, DeviceSerial int, WaybillSerial int)");
-
+    //6  таблица обращений клиентов с запросами
     q.exec("CREATE TABLE Request (RequestId int primary key, Date varchar,"
                                  "ClientFirstname int, ClientLastname int, ClientThirdname int, "
                                  "DepartmentName int, WorkId int)");
-
+    //7  таблица состояния устройства
     q.exec("CREATE TABLE State (StateId int primary key, State varchar)");
-
+    //8  таблица гарантии устройств
     q.exec("CREATE TABLE Varranty (VarrantyId int primary key, Varranty varchar)");
+    //9  таблица перечня элементов комплекта
+    q.exec("CREATE TABLE Sets (SetsId int primary key, Name varchar, TypeId int)");
+    //10 таблица комплектности изделия при сдачи в ремонт
+    q.exec("CREATE TABLE Komplekt (KomplektId int primary key, SetsId int, WorkId int)");
 
     //----------------------------------------------------------------------------------------------------------------
     q.exec("INSERT INTO Department VALUES (0, 'Моск. обл. ГУМВД (ОПБ)', 'Москва, Ленинский пр-т, д.1', '114560 VIN BIN AAA 555 111 сегодня не работаем')");
@@ -175,8 +182,8 @@ void MainWindow::createMemoryDatabase(QSqlDatabase &db)
     q.exec("INSERT INTO Varranty VALUES (0, 'Снят')");
     q.exec("INSERT INTO Varranty VALUES (1, 'На гарантии')");
 
-    q.exec("INSERT INTO Client VALUES (0, 'Семен', 'Трусов', 'Сергеевич', '+7(354) 353 2376', 'TruSS@pop2.ru', 0)");
-    q.exec("INSERT INTO Client VALUES (1, 'Павел', 'Невняшкин', 'Могаевич', '+7(753) 326 7643', 'pavMogu@man.ru', 0)");
+    q.exec("INSERT INTO Client VALUES (0, 'Трусов', 'Семен', 'Сергеевич', '+7(354) 353 2376', 'TruSS@pop2.ru', 0)");
+    q.exec("INSERT INTO Client VALUES (1, 'Невняшкин', 'Павел', 'Могаевич', '+7(753) 326 7643', 'pavMogu@man.ru', 0)");
 
     q.exec("INSERT INTO Device VALUES (201300201, 0, 0, '01.12.2013', 0, 'Истечение срока', '01.12.2015', 0)");
 
@@ -199,21 +206,30 @@ void MainWindow::createMemoryDatabase(QSqlDatabase &db)
     q.exec("INSERT INTO Request VALUES (3, '15.09.2015, 1, 1, 1, 0, 0)");
     q.exec("INSERT INTO Request VALUES (4, '19.09.2015', 1, 1, 1, 0, 0)");
     q.exec("INSERT INTO Request VALUES (5, '21.03.2016', 0, 0, 0, 0, 0)");
+
+    q.exec("INSERT INTO Sets VALUES (0, 'Камера', 0)");
+    q.exec("INSERT INTO Sets VALUES (1, 'Аккумуляторная батарея', 0)");
+    q.exec("INSERT INTO Sets VALUES (2, 'Флеш накопитель', 0)");
+    q.exec("INSERT INTO Sets VALUES (3, 'Зарядка', 0)");
+    q.exec("INSERT INTO Sets VALUES (4, 'Монитор', 0)");
+    q.exec("INSERT INTO Sets VALUES (5, 'Инстукция', 0)");
+    q.exec("INSERT INTO Sets VALUES (6, 'Жвачка', 0)");
+
 }
 
-void MainWindow::showClientControlDialog()
+void MainWindow::showDepartClientViewer()
 {
-    ClientControlDialog dialog = new ClientControlDialog();
-}
-
-void MainWindow::showDepartControlDialog()
-{
-
+    DepartClientViewer dialog(activeDb, this);
+    if(dialog.exec() != QDialog::Accepted)
+        return;
+    connect(&dialog, SIGNAL(statusMessage(QString)), this, SLOT(sendStatusMessage(QString)));
 }
 
 void MainWindow::showDeviceControlDialog()
 {
-
+    DeviceControlDialog dialog(this);
+    if(dialog.exec() != QDialog::Accepted)
+        return;
 }
 
 void MainWindow::about()

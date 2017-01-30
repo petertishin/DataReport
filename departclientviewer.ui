@@ -31,6 +31,16 @@
        <item>
         <widget class="QTableView" name="departmentView"/>
        </item>
+       <item>
+        <widget class="QDialogButtonBox" name="buttonBoxTop">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="standardButtons">
+          <set>QDialogButtonBox::NoButton</set>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="clientPanel" native="true">
@@ -45,18 +55,15 @@
        <item>
         <widget class="QTableView" name="clientView"/>
        </item>
+       <item>
+        <widget class="QDialogButtonBox" name="buttonBoxBtm">
+         <property name="standardButtons">
+          <set>QDialogButtonBox::Close</set>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
-    </widget>
-   </item>
-   <item>
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel</set>
-     </property>
     </widget>
    </item>
   </layout>
@@ -64,30 +71,14 @@
  <resources/>
  <connections>
   <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>DepartClientViewer</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>buttonBox</sender>
+   <sender>buttonBoxTop</sender>
    <signal>rejected()</signal>
    <receiver>DepartClientViewer</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>325</x>
+     <y>451</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>

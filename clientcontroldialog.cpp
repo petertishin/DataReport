@@ -1,4 +1,3 @@
-#include <QtGui>
 #include <QtSql>
 
 #include "clientcontroldialog.h"
@@ -11,31 +10,31 @@ ClientControlDialog::ClientControlDialog(int id, QWidget *parent)
 
     buttonBox->addButton(addBtn, QDialogButtonBox::ActionRole);
     buttonBox->addButton(delBtn, QDialogButtonBox::ActionRole);
-
+    qDebug()<<"1";
     tableModel = new QSqlRelationalTableModel(this);
     tableModel->setTable("Client");
     tableModel->setRelation(6, QSqlRelation("Department", "DepartmentId", "Name"));
-    tableModel->setSort("Lastname", Qt::AscendingOrder);
+    tableModel->setSort(2, Qt::AscendingOrder);
     tableModel->select();
-
-    QSqlTableModel *relationModel = tableModel->relationModel("DepartmentId");
+    qDebug()<<"2";
+    QSqlTableModel *relationModel = tableModel->relationModel(6);
     departmentComboBox->setModel(relationModel);
     departmentComboBox->setModelColumn(relationModel->fieldIndex("Name"));
-
+    qDebug()<<"3";
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::AutoSubmit);
     mapper->setModel(tableModel);
-    mapper->setItemDelegate(new QSqlRelationDelegate(this));
+    mapper->setItemDelegate(new QSqlRelationalDelegate(this));
     mapper->addMapping(firstnameEdit, 1);
     mapper->addMapping(lastnameEdit, 2);
     mapper->addMapping(thirdnameEdit, 3);
     mapper->addMapping(departmentComboBox, 4);
     mapper->addMapping(telephoneEdit,5);
     mapper->addMapping(emailEdit,6);
-
+    qDebug()<<"4";
     if (id != -1) {
         for (int row=0; row<tableModel->rowCount(); ++row) {
-            QSqlRecord record = tableModel->recoed(row);
+            QSqlRecord record = tableModel->record(row);
             if (record.value(0).toInt() == id) {
                 mapper->setCurrentIndex(row);
                 break;
@@ -44,7 +43,7 @@ ClientControlDialog::ClientControlDialog(int id, QWidget *parent)
     } else {
         mapper->toFirst();
     }
-
+    qDebug()<<"5";
     connect(firstBtn, SIGNAL(clicked()), mapper, SLOT(toFirst()));
     connect(previousBtn, SIGNAL(clicked()), mapper, SLOT(toPrevious()));
     connect(nextBtn, SIGNAL(clicked()), mapper, SLOT(toNext()));
@@ -88,7 +87,7 @@ ClientControlDialog::ClientControlDialog(int id, QWidget *parent)
     setWindowTitle(tr("Управление клиентами"));
 }
 
-void ClientControlDialog::done()
+void ClientControlDialog::done(int result)
 {
     mapper->submit();
     QDialog::done(result);

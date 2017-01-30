@@ -4,25 +4,49 @@
 #include "clientcontroldialog.h"
 #include "departcontroldialog.h"
 
-
-DepartClientViewer::DepartClientViewer(QWidget *parent) :
+/*
+ *addDepart     появляется пустая строка, редактирование невозможно
+ *deleteDepart  удаляется департамент и все привязанные клиенты
+ *editDepart    ошибка
+ *
+ *addClient     ошибка
+ *deleteClient  удаляется выделенный клиент
+ *editClient    ошибка
+*/
+DepartClientViewer::DepartClientViewer(const QString &dbname, QWidget *parent) :
     QDialog(parent)
 {
     setupUi(this);
+    activeDb = dbname;
+    createDepartmentPanel();
+    createClientPanel();
 
-    addBtn = new QPushButton("Добавить");
-    deleteBtn = new QPushButton("Удалить");
-    editBtn = new QPushButton("Изменить");
 
-    buttonBox->addButton(addBtn, QDialogButtonBox::ActionRole);
-    buttonBox->addButton(deleteBtn, QDialogButtonBox::ActionRole);
-    buttonBox->addButton(editBtn, QDialogButtonBox::ActionRole);
+    addDepartBtn = new QPushButton("Добавить департамент");
+    deleteDepartBtn = new QPushButton("Удалить департамент");
+    editDepartBtn = new QPushButton("Изменить");
 
-    connect(addBtn, SIGNAL(clicked()), this, SLOT(addDepartment()));
-    connect(editBtn, SIGNAL(clicked()), this, SLOT(editClient()));
-    connect(deleteBtn, SIGNAL(clicked()), this, SLOT(deleteDepartment()));
+    addClientBtn = new QPushButton("Добавить клиента");
+    deleteClientBtn = new QPushButton("Удалить клиента");
+    editClientBtn = new QPushButton("Изменить");
+
+    buttonBoxTop->addButton(addDepartBtn, QDialogButtonBox::ActionRole);
+    buttonBoxTop->addButton(deleteDepartBtn, QDialogButtonBox::ActionRole);
+    buttonBoxTop->addButton(editDepartBtn, QDialogButtonBox::ActionRole);
+
+    buttonBoxBtm->addButton(addClientBtn, QDialogButtonBox::ActionRole);
+    buttonBoxBtm->addButton(deleteClientBtn, QDialogButtonBox::ActionRole);
+    buttonBoxBtm->addButton(editClientBtn, QDialogButtonBox::ActionRole);
+
+    connect(addDepartBtn, SIGNAL(clicked()), this, SLOT(addDepartment()));
+    connect(editDepartBtn, SIGNAL(clicked()), this, SLOT(editDepartment()));
+    connect(deleteDepartBtn, SIGNAL(clicked()), this, SLOT(deleteDepartment()));
+    connect(addClientBtn, SIGNAL(clicked()), this, SLOT(addClient()));
+    connect(editClientBtn, SIGNAL(clicked()), this, SLOT(editClient()));
+    connect(deleteClientBtn, SIGNAL(clicked()), this, SLOT(deleteClient()));
 
     setWindowTitle(tr("Обзор представителей заказчиков"));
+    departmentView->setCurrentIndex(departmentModel->index(0, 0));
 }
 
 DepartClientViewer::~DepartClientViewer()
@@ -30,14 +54,9 @@ DepartClientViewer::~DepartClientViewer()
 
 }
 
-//Перегрузка операции редактирования таблицы (открыть departControlDialog)
-void QAbstractItemView::edit(const QModelIndex &index)
+QSqlDatabase DepartClientViewer::currentDatabase() const
 {
-    DepartControlDialog dialog = new DepartControlDialog(this);
-    if(dialog.exec() != QDialog::Accepted) {
-        //обновление таблицы и выделение новосозданного объекта
-        return;
-    }
+    return QSqlDatabase::database(activeDb);
 }
 
 void DepartClientViewer::updateClientView()
@@ -60,7 +79,8 @@ void DepartClientViewer::addDepartment()
     departmentModel->insertRow(row);
     QModelIndex index = departmentModel->index(row, 1);
     departmentView->setCurrentIndex(index);
-    departmentView->edit(index);//перегрузка функции(вызов редактора департамента)
+    //departmentView->edit(index);//перегрузка функции(вызов редактора департамента)
+    //editDepartment();
 }
 
 void DepartClientViewer::deleteDepartment()
@@ -96,8 +116,53 @@ void DepartClientViewer::deleteDepartment()
     departmentModel->submitAll();
     QSqlDatabase::database().commit();
 
+    createDepartmentPanel();
     updateClientView();
     departmentView->setFocus();
+}
+
+void DepartClientViewer::editDepartment()
+{
+    int departId = -1;
+    QModelIndex index = departmentView->currentIndex();
+    if (index.isValid()) {
+        QSqlRecord record = departmentModel->record(index.row());
+        departId = record.value(0).toInt();
+    }
+
+    DepartControlDialog dialog(departId, this);
+    if(dialog.exec() != QDialog::Accepted) {
+        //обновление таблицы и выделение новосозданного объекта
+        createDepartmentPanel();
+        departmentModel->selectRow(index.row());
+        return;
+    }
+}
+
+void DepartClientViewer::addClient()
+{
+    int row = clientModel->rowCount();
+    clientModel->insertRow(row);
+    QModelIndex index = clientModel->index(row, 1);
+    clientView->setCurrentIndex(index);
+    editClient();
+}
+
+void DepartClientViewer::deleteClient()
+{
+    QModelIndex index = clientView->currentIndex();
+    if (!index.isValid())
+        return;
+
+    QSqlDatabase::database().transaction();
+    QSqlRecord record = clientModel->record(index.row());
+
+    clientModel->removeRow(index.row());
+    clientModel->submitAll();
+    QSqlDatabase::database().commit();
+
+    updateClientView();
+    clientView->setFocus();
 }
 
 void DepartClientViewer::editClient()
@@ -116,12 +181,15 @@ void DepartClientViewer::editClient()
 
 void DepartClientViewer::createDepartmentPanel()
 {
-    departmentModel->setTable("Department");
+    departmentModel = new QSqlRelationalTableModel(departmentView, currentDatabase());
+    departmentModel->setTable(currentDatabase().driver()->escapeIdentifier("Department", QSqlDriver::TableName));
     departmentModel->setSort(1, Qt::AscendingOrder);
     departmentModel->setHeaderData(1, Qt::Horizontal, tr("Департамент"));
     departmentModel->setHeaderData(2, Qt::Horizontal, tr("Адрес"));
     departmentModel->setHeaderData(3, Qt::Horizontal, tr("Реквизиты"));
     departmentModel->select();
+    if (departmentModel->lastError().type() != QSqlError::NoError)
+        emit statusMessage(departmentModel->lastError().text());
 
     departmentView->setModel(departmentModel);
     departmentView->setItemDelegate(new QSqlRelationalDelegate(this));
@@ -138,6 +206,8 @@ void DepartClientViewer::createDepartmentPanel()
 
 void DepartClientViewer::createClientPanel()
 {
+    clientModel = new QSqlRelationalTableModel(clientView, currentDatabase());
+
     clientModel->setTable("Client");
     clientModel->setRelation(6, QSqlRelation("Department", "DepartmentId", "Name"));
     clientModel->setSort(2, Qt::AscendingOrder);
@@ -155,4 +225,5 @@ void DepartClientViewer::createClientPanel()
     clientView->setColumnHidden(0,true);
     clientView->setColumnHidden(6,true);
     clientView->resizeColumnsToContents();
+
 }

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>391</width>
-    <height>242</height>
+    <width>357</width>
+    <height>268</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>TextLabel</string>
+        <string>Вид изделия:</string>
        </property>
        <property name="buddy">
         <cstring>comboBox</cstring>
@@ -37,6 +37,13 @@
       </widget>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Состав изделия:</string>
+     </property>
+    </widget>
    </item>
    <item>
     <widget class="QTableView" name="tableView"/>
