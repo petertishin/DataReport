@@ -36,8 +36,14 @@
          <height>231</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string comment="Отображение накладных"/>
+       </property>
+       <property name="toolTipDuration">
+        <number>5</number>
+       </property>
        <property name="text">
-        <string>WayBill Base</string>
+        <string>Накладные</string>
        </property>
       </widget>
      </item>
@@ -55,8 +61,14 @@
          <height>231</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string comment="Отображение Устройств"/>
+       </property>
+       <property name="toolTipDuration">
+        <number>5</number>
+       </property>
        <property name="text">
-        <string>Device Base</string>
+        <string>Устройства</string>
        </property>
       </widget>
      </item>
@@ -76,8 +88,14 @@
        <height>231</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string comment="Заполнение вормы приема в ремонт"/>
+     </property>
+     <property name="toolTipDuration">
+      <number>5</number>
+     </property>
      <property name="text">
-      <string>Repair</string>
+      <string>Ремонт</string>
      </property>
     </widget>
    </item>
@@ -105,8 +123,11 @@
        <height>111</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string comment="Импорт записей из Excel файла"/>
+     </property>
      <property name="text">
-      <string>Update Database by Excel file</string>
+      <string>Импорт данных из Excel файла</string>
      </property>
     </widget>
    </item>
