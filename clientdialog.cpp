@@ -6,12 +6,9 @@ int uniqueClientId;
 ClientDialog::ClientDialog(QSqlRelationalTableModel *client, const QSqlRecord &clientData, const QString &dbname, QWidget *parent) :
     QDialog(parent)
 {
-    setupUi(this);
     clientTable = client;
     activeDb = dbname;
-    saved = false;
-    uniqueClientId = clientTable->rowCount();
-    saveButton->setEnabled(saved);
+    setupUi(this);
 
     departModel = new QSqlTableModel(this, currentDatabase());
     departModel->setTable(currentDatabase().tables().at(0));
@@ -29,16 +26,9 @@ ClientDialog::ClientDialog(QSqlRelationalTableModel *client, const QSqlRecord &c
     EmailEdit->setText(clientData.value("Email").toString());
 
     connect(newDepBtn, SIGNAL(clicked()), this, SLOT(createNewDepart()));
-    connect(saveButton, SIGNAL(clicked()), this, SLOT(save()));
     connect(buttonBox, SIGNAL(accepted()), this, SLOT(submit()));
     connect(buttonBox, SIGNAL(rejected()), this, SLOT(close()));
 
-    connect(FirstnameEdit, SIGNAL(editingFinished()), this, SLOT(editingFinished()));
-    connect(LastnameEdit, SIGNAL(editingFinished()), this, SLOT(editingFinished()));
-    connect(ThirdnameEdit, SIGNAL(editingFinished()), this, SLOT(editingFinished()));
-    connect(TelephoneEdit, SIGNAL(editingFinished()), this, SLOT(editingFinished()));
-    connect(EmailEdit, SIGNAL(editingFinished()), this, SLOT(editingFinished()));
-    connect(comboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(editingFinished()));
 }
 
 ClientDialog::~ClientDialog()
@@ -50,40 +40,21 @@ QSqlDatabase ClientDialog::currentDatabase() const
     return QSqlDatabase::database(activeDb);
 }
 
-void ClientDialog::editingFinished()
-{
-    saved = false;
-    if((FirstnameEdit->text()!="")&&(LastnameEdit->text()!="")&&(ThirdnameEdit->text()!=""))
-        saveButton->setEnabled(!saved);
-}
-
-void ClientDialog::save()
-{
-    QString Firstname = FirstnameEdit->text();
-    QString Lastname = LastnameEdit->text();
-
-    if(Firstname.isEmpty() || Lastname.isEmpty()) {
-        QString message(tr("Пожалуйста, заполните обязательные поля."));
-        QMessageBox::information(this, tr("Добавить представитель заказчика"), message);
-    } else {
-        clientId = findClientId();
-        saved = true;
-        saveButton->setEnabled(!saved);
-    }
-
-}
-
 void ClientDialog::submit()
 {
     QString Firstname = FirstnameEdit->text();
     QString Lastname = LastnameEdit->text();
+    QString Thirdname = ThirdnameEdit->text();
+    QString Telephone = TelephoneEdit->text();
+    QString Email = EmailEdit->text();
+    int DepId = comboBox->currentIndex();
 
     if(Firstname.isEmpty() || Lastname.isEmpty()) {
         QString message(tr("Пожалуйста, заполните обязательные поля."));
         QMessageBox::information(this, tr("Добавить представитель заказчика"), message);
     } else {
-        clientId = findClientId();//начало процесса записи через поиск
-        saved = true;
+        int clientId = findClientId();
+
         accept();
     }
 }
@@ -125,16 +96,16 @@ int ClientDialog::addNewClient()
     int id = generateClientId();
 
     QSqlField f1("ClientId", QVariant::Int);
-    QSqlField f2("Lastname", QVariant::String);
-    QSqlField f3("Firstname", QVariant::String);
+    QSqlField f2("Firstname", QVariant::String);
+    QSqlField f3("Lastname", QVariant::String);
     QSqlField f4("Thirdname", QVariant::String);
     QSqlField f5("Telefon", QVariant::String);
     QSqlField f6("Email", QVariant::String);
     QSqlField f7("DepartmentName", QVariant::Int);
 
     f1.setValue(QVariant(id));
-    f2.setValue(QVariant(LastnameEdit->text()));
-    f3.setValue(QVariant(FirstnameEdit->text()));
+    f2.setValue(QVariant(FirstnameEdit->text()));
+    f3.setValue(QVariant(LastnameEdit->text()));
     f4.setValue(QVariant(ThirdnameEdit->text()));
     f5.setValue(QVariant(TelephoneEdit->text()));
     f6.setValue(QVariant(EmailEdit->text()));
@@ -154,6 +125,7 @@ int ClientDialog::addNewClient()
 
 int ClientDialog::generateClientId()
 {
+    uniqueClientId = clientTable->rowCount();
     uniqueClientId += 1;
     return uniqueClientId;
 }

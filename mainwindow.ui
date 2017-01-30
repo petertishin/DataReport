@@ -35,7 +35,7 @@
      <x>0</x>
      <y>0</y>
      <width>1087</width>
-     <height>18</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -48,14 +48,6 @@
     <property name="title">
      <string>Правка</string>
     </property>
-    <widget class="QMenu" name="menu">
-     <property name="title">
-      <string>Управление</string>
-     </property>
-     <addaction name="departVieweraction"/>
-     <addaction name="deviceAction"/>
-    </widget>
-    <addaction name="menu"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -76,7 +68,7 @@
     <string>Подключить базу данных</string>
    </property>
   </action>
-  <action name="quitAction">
+  <action name="QuitAction">
    <property name="text">
     <string>Выход</string>
    </property>
@@ -87,19 +79,6 @@
   <action name="aboutAction">
    <property name="text">
     <string>О программе</string>
-   </property>
-  </action>
-  <action name="deviceAction">
-   <property name="text">
-    <string>Устройства</string>
-   </property>
-  </action>
-  <action name="departVieweraction">
-   <property name="text">
-    <string>Заказчики</string>
-   </property>
-   <property name="toolTip">
-    <string>Заказчики</string>
    </property>
   </action>
  </widget>

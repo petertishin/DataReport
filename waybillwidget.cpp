@@ -382,6 +382,7 @@ void WayBillWidget::printExcelReport_clicked()
     }
 }
 
+
 void WayBillWidget::okButton_clicked()
 {
     if(!saved) {

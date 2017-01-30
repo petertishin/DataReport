@@ -3,7 +3,6 @@
 
 #include <QMainWindow>
 #include <QSqlDatabase>
-#include "importer.h"
 #include "ui_mainwindow.h"
 
 QT_FORWARD_DECLARE_CLASS(QPushButton)
@@ -24,8 +23,6 @@ public:
 
 public slots:
     void addConnection();
-    void showDepartClientViewer();
-    void showDeviceControlDialog();
     void on_addConnectionAction_triggered() { addConnection(); }
     void on_aboutAction_triggered() { about();}
     void sendStatusMessage(const QString &message);
@@ -37,7 +34,6 @@ public slots:
     void openWaybillEdit(const QSqlRecord &record);
     void openDeviceEdit(const QSqlRecord &record);
     void openDialExcelBrowser();
-    void openAccessDial(QSqlTableModel *table, QSqlRecord recordO, QSqlRecord recordN);
 
 signals:
     void statusMessage(const QString &message);
@@ -46,7 +42,6 @@ private:
     int tabId;
     QString activeDb;
     QStringList tables;
-    Importer* importer;
 };
 
 #endif // MAINWINDOW_H
