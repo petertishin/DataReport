@@ -23,7 +23,7 @@ public:
 
 private slots:
     void editingFinished();//изменение статуса сохранения после редактирования
-    bool save();
+    void save();
     void submit();//подтверждение данных и их запись в базу
     void createNewDepart();
 

@@ -6,11 +6,16 @@
 #include <QDataWidgetMapper>
 #include "ui_devtypecontroldialog.h"
 
+class QDialogButtonBox;
+class QGroupBox;
+class QLabel;
+class QSqlRelationalTableModel;
+
 class DevTypeControlDialog : public QDialog, private Ui::DevTypeControlDialog
 {
     Q_OBJECT
 public:
-    explicit DevTypeControlDialog(QWidget *parent = 0);
+    explicit DevTypeControlDialog(const QString &dbname, QWidget *parent = 0);
 
     void done(int result);
 
@@ -20,12 +25,17 @@ private slots:
     void deletedevType();
 
 private:
-    QSqlRelationalTableModel *tableModel;
-    QDataWidgetMapper *mapper;
-    QPushButton *addBtn;
-    QPushButton *editBtn;
-    QPushButton *deleteBtn;
+    QSqlDatabase currentDatabase() const;
+    void decreaseTypeCount(QModelIndex typeIndex);
+    QModelIndex indexOfType(const QString &type);
+    void readTypeData();
+    void removeTypeFromDatabase(QModelIndex type);
+    void removeTypeFromFile(int id);
 
+    QSqlRelationalTableModel *model;
+    QString activeDb;
+    QPushButton *editBtn;
+    QPushButton *delBtn;
 };
 
 #endif // DEVTYPECONTROLDIALOG_H

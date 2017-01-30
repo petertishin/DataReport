@@ -129,8 +129,9 @@ void DepartClientViewer::editDepartment()
         QSqlRecord record = departmentModel->record(index.row());
         departId = record.value(0).toInt();
     }
-
+    qDebug()<<"index = "<<departId;
     DepartControlDialog dialog(departId, this);
+    qDebug()<<"after dialog constructor";
     if(dialog.exec() != QDialog::Accepted) {
         //обновление таблицы и выделение новосозданного объекта
         createDepartmentPanel();

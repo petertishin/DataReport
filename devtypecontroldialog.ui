@@ -30,7 +30,7 @@
       <widget class="QComboBox" name="comboBox"/>
      </item>
      <item>
-      <widget class="QToolButton" name="toolButton">
+      <widget class="QToolButton" name="newTypeBtn">
        <property name="text">
         <string>...</string>
        </property>

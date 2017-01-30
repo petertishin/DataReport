@@ -6,11 +6,12 @@ int uniqueClientId;
 ClientDialog::ClientDialog(QSqlRelationalTableModel *client, const QSqlRecord &clientData, const QString &dbname, QWidget *parent) :
     QDialog(parent)
 {
+    setupUi(this);
     clientTable = client;
     activeDb = dbname;
     saved = false;
     uniqueClientId = clientTable->rowCount();
-    setupUi(this);
+    saveButton->setEnabled(saved);
 
     departModel = new QSqlTableModel(this, currentDatabase());
     departModel->setTable(currentDatabase().tables().at(0));
@@ -52,17 +53,14 @@ QSqlDatabase ClientDialog::currentDatabase() const
 void ClientDialog::editingFinished()
 {
     saved = false;
-    saveButton->setEnabled(!saved);
+    if((FirstnameEdit->text()!="")&&(LastnameEdit->text()!="")&&(ThirdnameEdit->text()!=""))
+        saveButton->setEnabled(!saved);
 }
 
-bool ClientDialog::save()
+void ClientDialog::save()
 {
     QString Firstname = FirstnameEdit->text();
     QString Lastname = LastnameEdit->text();
-    //QString Thirdname = ThirdnameEdit->text();
-    //QString Telephone = TelephoneEdit->text();
-    //QString Email = EmailEdit->text();
-    //int DepId = comboBox->currentIndex();
 
     if(Firstname.isEmpty() || Lastname.isEmpty()) {
         QString message(tr("Пожалуйста, заполните обязательные поля."));
@@ -73,17 +71,12 @@ bool ClientDialog::save()
         saveButton->setEnabled(!saved);
     }
 
-    return saved;
 }
 
 void ClientDialog::submit()
 {
     QString Firstname = FirstnameEdit->text();
     QString Lastname = LastnameEdit->text();
-    //QString Thirdname = ThirdnameEdit->text();
-    //QString Telephone = TelephoneEdit->text();
-    //QString Email = EmailEdit->text();
-    //int DepId = comboBox->currentIndex();
 
     if(Firstname.isEmpty() || Lastname.isEmpty()) {
         QString message(tr("Пожалуйста, заполните обязательные поля."));
