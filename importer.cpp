@@ -75,6 +75,8 @@ void Importer::readRecords()
         findRequestId(row, col);//отдельная страница
 
     }
+
+    emit finished();
 }
 
 int Importer::findDevTypeId(int row, int col)

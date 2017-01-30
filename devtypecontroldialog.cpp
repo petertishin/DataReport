@@ -1,5 +1,5 @@
 #include "devtypecontroldialog.h"
 
-DevTypeControlDialog::DevTypeControlDialog()
+DevTypeControlDialog::DevTypeControlDialog(QWidget *parent)
 {
 }

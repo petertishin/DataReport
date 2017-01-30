@@ -17,6 +17,9 @@ public:
     virtual ~MainWindow();
 
     QSqlDatabase currentDatabase() const;
+    void showClientControlDialog();
+    void showDepartControlDialog();
+    void showDeviceControlDialog();
     void about();
     QSqlError addConnection(const QString &driver, const QString &dbName, const QString &host,
                   const QString &user, const QString &passwd, int port = -1);

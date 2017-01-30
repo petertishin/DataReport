@@ -29,7 +29,9 @@ SOURCES += main.cpp\
     accessdialog.cpp \
     clientcontroldialog.cpp \
     departcontroldialog.cpp \
-    devtypecontroldialog.cpp
+    devtypecontroldialog.cpp \
+    departclientviewer.cpp \
+    devicecontroldialog.cpp
 
 
 HEADERS  += \
@@ -48,7 +50,9 @@ HEADERS  += \
     accessdialog.h \
     clientcontroldialog.h \
     departcontroldialog.h \
-    devtypecontroldialog.h
+    devtypecontroldialog.h \
+    departclientviewer.h \
+    devicecontroldialog.h
 
 FORMS    += \
     waybillbrowser.ui \
@@ -62,4 +66,9 @@ FORMS    += \
     startpage.ui \
     devicewidget.ui \
     repairdialog.ui \
-    accessdialog.ui
+    accessdialog.ui \
+    clientcontroldialog.ui \
+    departcontroldialog.ui \
+    devicecontroldialog.ui \
+    departclientviewer.ui \
+    devtypecontroldialog.ui

@@ -6,6 +6,9 @@
 #include "devicewidget.h"
 #include "accessdialog.h"
 #include "qsqlconnectiondialog.h"
+//#include "clientcontroldialog.h"
+//#include "departcontroldialog.h"
+//#include "devicecontroldialog.h"
 //#include "xlsxdocument.h"
 
 #include <QFileDialog>
@@ -22,6 +25,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     StartPage *startpage = new StartPage(activeDb, tables, tab);
     TabWidget->setCurrentWidget(startpage);
     
+    //connect(clientAction, SIGNAL(triggered()), this, SLOT(showClientControlDialog())));
+    //connect(departAction, SIGNAL(triggered()), this, SLOT(showDepartControlDialog())));
+    //connect(deviceAction, SIGNAL(triggered()), this, SLOT(showDeviceControlDialog())));
     connect(startpage, SIGNAL(openWaybillBrowser()), this, SLOT(openWaybillBrowser()));
     connect(startpage, SIGNAL(openDeviceBrowser()), this, SLOT(openDeviceBrowser()));
     connect(startpage, SIGNAL(openRepair()), this, SLOT(openRepair()));
@@ -64,7 +70,7 @@ void MainWindow::addConnection()
         //QSqlDatabase db = QSqlDatabase::addDatabase(dialog.databaseName());
         //db.setDatabaseName(dbname);
         //db.open();
-        QString dbname = "../custombase.sqlite";
+        QString dbname = "custombase.dat";
         QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
         db.setDatabaseName(dbname);
         db.open();
@@ -193,6 +199,21 @@ void MainWindow::createMemoryDatabase(QSqlDatabase &db)
     q.exec("INSERT INTO Request VALUES (3, '15.09.2015, 1, 1, 1, 0, 0)");
     q.exec("INSERT INTO Request VALUES (4, '19.09.2015', 1, 1, 1, 0, 0)");
     q.exec("INSERT INTO Request VALUES (5, '21.03.2016', 0, 0, 0, 0, 0)");
+}
+
+void MainWindow::showClientControlDialog()
+{
+    ClientControlDialog dialog = new ClientControlDialog();
+}
+
+void MainWindow::showDepartControlDialog()
+{
+
+}
+
+void MainWindow::showDeviceControlDialog()
+{
+
 }
 
 void MainWindow::about()

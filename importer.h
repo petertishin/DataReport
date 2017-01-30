@@ -19,6 +19,7 @@ signals:
     void progress(int i);
     void difference(QSqlTableModel *table, QSqlRecord recordO,
                     QSqlRecord recordN);//сигнал для открытия диалога о перезаписи совместимостей
+    void finished();
 
 private:
     QSqlDatabase currentDatabase() const;
