@@ -16,16 +16,44 @@ public:
 
 signals:
     void progress(int i);
+    void difference(QSqlRecord &rec);//сигнал для открытия диалога о перезаписи совместимостей
 
 public slots:
-
+    bool saveDifference();
 
 private:
     QSqlDatabase currentDatabase() const;
-    void readRecords(QXlsx::Document *doc);
+    void readRecords();
     bool checkForExp(QSqlTableModel* table, QSqlRecord* rec);
 
+    int findDepartId(int row, int col);
+    int findDevTypeId(int row, int col);
+    int findDeviceId(int row, int col);
+    int findClientId(int row, int col);
+    int findWaybillId(int row, int col);
+    int findWorkId(int row, int col);
+    int findRequestId(int row, int col);
+
+    int changeRecord(QSqlTableModel* model, QSqlRecord* rec, int row, int col);
+
+    bool addNewDepart(int row, int col);
+    bool addNewDevType(int row, int col);
+    bool addNewDevice(int row, int col);
+    bool addNewClient(int row, int col);
+    bool addNewWaybill(int row, int col);
+    bool addNewWork(int row, int col);
+    bool addNewRequest(int row, int col);
+
+    int generateDepartId();
+    int generateDevTypeId();
+    int generateDeviceId();
+    int generateClientId();
+    int generateWaybillId();
+    int generateWorkId();
+    int generateRequestId();
+
     QString activeDb;
+    QXlsx::Document doc;
 
     int uniqueDTid;
     int uniqueDepid;

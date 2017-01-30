@@ -5,13 +5,14 @@
 #include "devicebrowser.h"
 #include "devicewidget.h"
 #include "qsqlconnectiondialog.h"
-#include "importer.h"
 //#include "xlsxdocument.h"
 
 #include <QFileDialog>
 #include <QProgressDialog>
 #include <QtXml>
 #include <QtSql>
+
+extern bool sc = false;//save changes
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
@@ -281,12 +282,20 @@ void MainWindow::openDialExcelBrowser()
     QString fileName = QFileDialog::getOpenFileName(this,tr("Выберите файл для извлечения данных:"),QString(),
                                                         QString().fromLocal8Bit("Microsoft Excel (*.xlsx)"));
     QThread* thread = new QThread();
-    Importer* importer = new Importer();
+    importer = new Importer();
     importer->moveToThread(thread);
 
     //QXlsx::Document xlsx(fileName);
     QProgressDialog* pprd = new QProgressDialog("Импортирование данных...", "Отмена", 0, 10000);
     pprd->setWindowTitle("Пожалуйста, подождите");
+
+    importer->requestWork(fileName, activeDb, tables);
+    thread->start();
+
+    connect(importer, SIGNAL(finished()), this, SLOT());
+    connect(importer, SIGNAL(progress(int)), pprd, SLOT(setValue(int));
+    connect(importer, SIGNAL(saveDifference()), this, SLOT(openAccessDial()));
+
     for(int i=0; i<10000; i++) {
         pprd->setValue(i);
         qApp->processEvents();
